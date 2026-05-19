@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FINAL ESCAPE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { width: 100%; height: 100%; }
+        body {
+            overflow: hidden;
+            font-family: 'Orbitron', sans-serif;
+            background: black;
+            width: 100%;
+            height: 100%;
+            touch-action: manipulation;
+        }
+
+        /* GAME */
+        #game {
+            width: 100%; height: 100%;
+            background-size: cover;
+            background-position: center;
+            transition: 1s;
+            position: relative;
+            overflow: hidden;
+        }
+        #overlay { position: absolute; width: 100%; height: 100%; background: transparent; }
+
+        /* SCREEN */
+        .screen {
+            position: absolute; width: 100%; height: 100%;
+            display: flex; justify-content: center; align-items: center;
+            z-index: 100; background: black;
+        }
+        .box {
+            width: 900px; max-width: 95%; max-height: 90vh; overflow-y: auto;
+            background: rgba(0,0,0,0.9); border: 2px solid cyan; border-radius: 30px;
+            padding: 40px; text-align: center; color: white; box-shadow: 0 0 35px cyan;
+        }
+        h1 { font-size: 60px; color: cyan; margin-bottom: 20px; text-shadow: 0 0 15px cyan, 0 0 30px cyan; }
+        .story { font-size: 19px; line-height: 1.8; margin-bottom: 25px; }
+        input {
+            width: 100%; padding: 15px; border: none; border-radius: 12px;
+            margin-top: 20px; margin-bottom: 30px; font-size: 18px; text-align: center;
+        }
+
+        /* CHARACTERS */
+        #characters { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+        .character {
+            width: 170px; height: 220px; background: rgba(255,255,255,0.08);
+            border-radius: 20px; border: 2px solid transparent; cursor: pointer;
+            transition: 0.3s; display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+        }
+        .character:hover { transform: scale(1.05); border: 2px solid cyan; }
+        .character img { width: 100px; margin-bottom: 10px; }
+        .selected { border: 2px solid cyan; box-shadow: 0 0 20px cyan; }
+
+        /* BUTTON */
+        button {
+            padding: 12px 20px; border: none; border-radius: 12px;
+            background: cyan; color: black; font-size: clamp(14px,2vw,18px);
+            font-weight: bold; cursor: pointer; transition: 0.3s;
+        }
+        button:hover { transform: scale(1.05); }
+
+        /* EXIT BUTTON */
+        #exitBtn {
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            background: #ff4444; color: white; border: none; border-radius: 10px;
+            padding: 8px 18px; font-size: 13px; font-weight: bold; cursor: pointer;
+            z-index: 60; transition: 0.3s;
+        }
+        #exitBtn:hover { background: #cc0000; transform: translateX(-50%) scale(1.05); }
+
+        /* ROOM */
+        #roomInfo { position: absolute; top: 20px; left: 20px; color: white; font-size: 26px; z-index: 50; text-shadow: 0 0 10px cyan; }
+        /* TIMER */
+        #timer { position: absolute; top: 20px; right: 20px; color: white; font-size: 22px; z-index: 50; }
+
+        /* HEALTH */
+        #healthArea { position: absolute; top: 20px; right: 120px; z-index: 60; }
+        #healthContainer { width: 180px; height: 18px; background: #222; border-radius: 20px; overflow: hidden; border: 2px solid white; }
+        #healthBar { width: 100%; height: 100%; background: red; transition: 0.4s; }
+        #healthText { color: white; font-size: 13px; text-align: center; margin-top: 4px; }
+
+        /* SCORE DISPLAY */
+        #scoreDisplay {
+            position: absolute; top: 65px; right: 120px; color: cyan;
+            font-size: 13px; z-index: 60; text-align: right;
+        }
+
+        /* QUESTION AREA */
+        #questionArea {
+            position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%);
+            width: 95%; max-width: 1200px; background: rgba(0,0,0,0.40);
+            border-radius: 18px; padding: 14px; max-height: 42vh; overflow-y: auto;
+            color: white; z-index: 40; backdrop-filter: blur(2px);
+            display: flex; gap: 15px; align-items: stretch;
+        }
+        .character { min-width: 120px; }
+
+        /* QUESTION SECTION */
+        #questionSection { flex: 1.7; }
+        #question { font-size: clamp(15px,2vw,22px); line-height: 1.5; margin-bottom: 22px; text-align: left; }
+
+        /* OPTIONS */
+        #options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .option {
+            width: 100%; padding: 12px; border: none; border-radius: 10px;
+            background: rgba(255,255,255,0.08); color: white; font-size: clamp(13px,2vw,16px);
+            cursor: pointer; transition: 0.3s;
+        }
+        .option:hover { background: rgba(0,255,255,0.2); transform: scale(1.02); }
+
+        /* ACTIVITY */
+        #activity {
+            flex: 1; background: rgba(255,255,255,0.04); padding: 16px; margin-bottom: 22px;
+            border-radius: 16px; min-height: 160px; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center; gap: 15px;
+        }
+        .activityButtons { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; width: 100%; }
+        .activityBtn {
+            padding: 18px 14px; border: none; border-radius: 10px; background: #333;
+            color: white; cursor: pointer; transition: 0.3s; font-size: clamp(12px,2vw,15px);
+            min-width: 80px; flex: 1;
+        }
+        .activityBtn:hover { background: cyan; color: black; }
+
+        /* MESSAGE */
+        #message { margin-top: 10px; font-size: 16px; min-height: 20px; color: #00ff99; text-align: left; }
+
+        /* HINT BUTTON */
+        #hintBtn { margin-top: 10px; padding: 8px 14px; border: none; border-radius: 10px; background: orange; color: black; font-size: 13px; font-weight: bold; cursor: pointer; display: none; }
+
+        /* CLUE POPUP */
+        #cluePopup {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+            background: black; border: 2px solid cyan; border-radius: 20px; padding: 30px;
+            color: white; z-index: 300; display: none; text-align: center;
+            box-shadow: 0 0 25px cyan; width: 400px; max-width: 90%;
+        }
+
+        /* DOOR */
+        #doorScreen {
+            position: absolute; width: 100%; height: 100%; background: black;
+            display: none; justify-content: center; align-items: center;
+            flex-direction: column; z-index: 500; color: white;
+        }
+
+        /* C++ STATUS PANEL — hidden always */
+        #cppPanel { display: none !important; }
+
+        /* VIDEO SCENE */
+        #videoScene { position: absolute; width: 100%; height: 100%; background: black; z-index: 540; display: none; justify-content: center; align-items: center; overflow: hidden; }
+        #endingVideo { width: 100%; height: 100%; object-fit: cover; }
+
+        /* ENDING SCENE */
+        #endingScene {
+            position: absolute; width: 100%; height: 100%;
+            background-image: url("images/finalescape.jpg");
+            background-size: cover; background-position: center;
+            z-index: 550; display: none; justify-content: center; align-items: center; overflow: hidden;
+        }
+        #endingOverlay { position: absolute; width: 100%; height: 100%; background: linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.88)); }
+        #endingContent { position: relative; z-index: 2; text-align: center; color: white; animation: fadeUp 2s ease; padding: 20px; }
+        #endingContent h1 { font-size: 70px; color: cyan; margin-bottom: 25px; text-shadow: 0 0 20px cyan; }
+        #endingContent p { font-size: 26px; line-height: 1.8; max-width: 900px; }
+
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+
+        #endingImage { width: 500px; max-width: 90%; border-radius: 25px; box-shadow: 0 0 40px cyan; animation: endingZoom 3s ease; }
+        #endingContent { margin-top: 30px; animation: fadeUp 2s ease; }
+        #endingContent h1 { font-size: 60px; color: cyan; margin-bottom: 20px; }
+        #endingContent p { font-size: 24px; line-height: 1.8; }
+        #endingVideo { width: 100%; height: 100%; object-fit: cover; background: black; }
+
+        @keyframes endingZoom { from { transform: scale(0.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        #door { width: 220px; height: 320px; background: #222; border: 8px solid #555; border-radius: 20px; animation: openDoor 2s forwards; }
+        @keyframes openDoor { 0% { transform: scaleX(1); } 100% { transform: scaleX(0); } }
+        #key { font-size: 80px; margin-bottom: 20px; animation: spin 2s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        /* FINAL */
+        #finalScreen {
+            display: none; position: absolute; width: 100%; height: 100%;
+            background: black; z-index: 600; justify-content: center;
+            align-items: center; text-align: center; color: white; padding: 30px;
+        }
+        #finalScreen h1 { font-size: 70px; margin-bottom: 20px; }
+        #finalScreen p { font-size: 24px; line-height: 1.8; max-width: 900px; margin: auto; }
+
+        /* RETURNING PLAYER POPUP */
+        #returningPopup {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+            background: rgba(0,0,0,0.95); border: 2px solid cyan; border-radius: 20px;
+            padding: 35px; color: white; z-index: 9999; text-align: center;
+            box-shadow: 0 0 30px cyan; width: 420px; max-width: 90%; display: none;
+        }
+        #returningPopup h2 { color: cyan; margin-bottom: 15px; font-size: 22px; }
+        #returningPopup p { font-size: 16px; margin-bottom: 20px; line-height: 1.7; }
+        .popupBtns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        .popupBtns button { flex: 1; min-width: 120px; }
+        .btnRed { background: #ff4444 !important; color: white !important; }
+
+        /* TRANSITION SCREEN */
+        #transitionScreen { display: none; flex-direction: column; justify-content: center; align-items: center; background: black; z-index: 900; }
+
+        /* MOBILE */
+        @media(max-width:900px) {
+            #game { background-size: contain; background-position: center 70px; background-repeat: no-repeat; }
+            h1 { font-size: 38px; }
+            .box { padding: 20px; width: 95%; }
+            .story { font-size: 15px; line-height: 1.6; }
+            #roomInfo { font-size: 16px; top: 12px; left: 12px; }
+            #timer { top: 12px; right: 12px; font-size: 15px; }
+            #healthArea { top: 42px; right: 12px; }
+            #healthContainer { width: 120px; height: 14px; }
+            #healthText { font-size: 10px; }
+            #scoreDisplay { top: 80px; right: 12px; font-size: 11px; }
+            #exitBtn { top: 12px; font-size: 11px; padding: 6px 12px; }
+            #questionArea { flex-direction: column; width: 95%; bottom: 30px; padding: 10px; gap: 10px; max-height: 85vh; }
+            #questionSection { width: 100%; }
+            #question { font-size: 15px; }
+            #options { grid-template-columns: 1fr; gap: 8px; }
+            .option { padding: 10px; font-size: 13px; }
+            #activity { width: 100%; min-height: auto; padding: 10px; }
+            #activity h3 { font-size: 15px; margin-bottom: 8px; }
+            #activity p { font-size: 13px; }
+            .activityButtons { gap: 8px; }
+            .activityBtn { flex: 1; min-width: 70px; font-size: 12px; padding: 10px; }
+            #message { font-size: 13px; }
+            #hintBtn { width: 100%; margin-top: 8px; }
+            #cluePopup { width: 92%; padding: 20px; }
+            #door { width: 150px; height: 240px; }
+            #key { font-size: 55px; }
+            #endingContent h1 { font-size: 34px; }
+            #endingContent p { font-size: 16px; line-height: 1.6; }
+            #finalScreen h1 { font-size: 40px; }
+            #finalScreen p { font-size: 16px; line-height: 1.7; }
+            .character { width: 140px; height: 180px; }
+            .character img { width: 70px; }
+            #cppPanel { display: none !important; }
+        }
+        @media(max-width:500px) {
+            #questionArea { bottom: 5px; }
+            #question { font-size: 13px; }
+            .option { font-size: 12px; }
+            .activityBtn { font-size: 11px; }
+            h1 { font-size: 30px; }
+        }
+        @media (max-height:600px) {
+            #questionArea { max-height: 55vh; overflow-y: auto; }
+            .box { padding: 15px; }
+            h1 { font-size: 28px; }
+            .story { font-size: 13px; }
+        }
+    </style>
+</head>
+
+<body>
+
+<div id="game">
+    <div id="overlay"></div>
+
+    <!-- ===================== START SCREEN ===================== -->
+    <div class="screen" id="startScreen">
+        <div class="box">
+            <h1>FINAL ESCAPE</h1>
+            <p class="story">
+                You are trapped inside a forgotten underground facility.
+                Choose your character and begin the escape mission.
+            </p>
+            <input type="text" id="nameInput" placeholder="ENTER YOUR NAME">
+            <div id="characters">
+                <div class="character" onclick="selectCharacter(0)">
+                    <img src="https://cdn-icons-png.flaticon.com/128/3952/3952988.png">
+                    <h2>Doctor</h2><p>+20 Health</p>
+                </div>
+                <div class="character" onclick="selectCharacter(1)">
+                    <img src="https://cdn-icons-png.flaticon.com/512/4712/4712109.png">
+                    <h2>Hacker</h2><p>+5 sec for Each Question</p>
+                </div>
+                <div class="character" onclick="selectCharacter(2)">
+                    <img src="https://cdn-icons-png.flaticon.com/512/2784/2784445.png">
+                    <h2>Scientist</h2><p>Gets Clues</p>
+                </div>
+            </div>
+            <br><br>
+            <button onclick="showInfo()">CONTINUE</button>
+        </div>
+    </div>
+
+    <!-- ===================== INFO SCREEN ===================== -->
+    <div class="screen" id="infoScreen" style="display:none;">
+        <div class="box">
+            <h1>MISSION BRIEFING</h1>
+            <p class="story">
+                Emergency alarms echo through the underground facility.
+                <br><br>
+                <span style="color:cyan;">"Only intelligent minds may escape alive."</span>
+            </p>
+            <div style="text-align:left;background:rgba(255,255,255,0.05);padding:20px;border-radius:20px;line-height:2;">
+                <h2 style="color:cyan;">HOW TO PLAY</h2>
+                <ul>
+                    <li>Every room contains 3 puzzles.</li>
+                    <li>Every puzzle has a related activity.</li>
+                    <li>Wrong answers decrease health by 20.</li>
+                    <li>If the timer reaches zero, the room restarts.</li>
+                    <li>If health reaches zero, the game restarts.</li>
+                    <li>The Scientist can use hint popups.</li>
+                    <li>Complete 3 puzzles to unlock the next room.</li>
+                    <li>Complete all rooms to escape the facility.</li>
+                    <li style="color:cyan;">Your progress is saved automatically by the C++ server!</li>
+                </ul>
+            </div>
+            <br><br>
+            <button onclick="showAboutScreen()">NEXT</button>
+        </div>
+    </div>
+
+    <!-- ===================== ABOUT SCREEN ===================== -->
+    <div class="screen" id="aboutScreen" style="display:none;">
+        <div class="box">
+            <h1 style="font-size:50px;">ABOUT THE GAME</h1>
+            <div style="text-align:left;background:rgba(255,255,255,0.05);padding:30px;border-radius:20px;line-height:1.8;margin-bottom:20px;">
+                <p style="font-size:18px;">
+                    You awaken with no memory in a highly secured, abandoned underground facility.
+                    To survive and escape, you must navigate through <strong>5 distinct rooms</strong>.
+                    Each room contains <strong>3 challenging puzzles</strong> and
+                    <strong>3 corresponding activities</strong>. Prove your intelligence,
+                    solve the mysteries, and find your way out before time runs out.
+                    <br><br>
+                    <span style="color:cyan;">
+                        ⚙️ Powered by a C++ backend server that reads questions from text files
+                        and saves your progress persistently across sessions.
+                    </span>
+                </p>
+            </div>
+            <br><br>
+            <button onclick="enterFacility()">ENTER FACILITY</button>
+        </div>
+    </div>
+
+    <!-- ===================== TRANSITION SCREEN ===================== -->
+    <div class="screen" id="transitionScreen" style="display:none;flex-direction:column;justify-content:center;align-items:center;background:black;z-index:900;">
+        <h1 id="transitionText" style="color:cyan;font-size:40px;">ENTERING TO THE GAME...</h1>
+    </div>
+
+    <!-- ===================== RETURNING PLAYER POPUP ===================== -->
+    <div id="returningPopup">
+        <h2>WELCOME BACK, <span id="returningName"></span>!</h2>
+        <p id="returningInfo">
+            We found your saved progress.<br>
+            Continue from where you left off?
+        </p>
+        <div class="popupBtns">
+            <button onclick="continueGame()">▶ CONTINUE</button>
+            <button class="btnRed" onclick="newGame()">🔄 NEW GAME</button>
+        </div>
+    </div>
+
+    <!-- ===================== HUD ===================== -->
+    <div id="roomInfo">ROOM 1 • LEVEL 1</div>
+    <div id="timer">⏳ 60</div>
+    <button id="exitBtn" onclick="exitGame()" style="display:none;">💾 SAVE & EXIT</button>
+    <div id="scoreDisplay" style="display:none;">⭐ SCORE: 0</div>
+
+    <!-- HEALTH -->
+    <div id="healthArea">
+        <div id="healthContainer"><div id="healthBar"></div></div>
+        <div id="healthText">100/100</div>
+    </div>
+
+    <!-- ===================== QUESTION AREA ===================== -->
+    <div id="questionArea">
+        <div id="questionSection">
+            <div id="question"></div>
+            <div id="options"></div>
+            <button id="hintBtn" onclick="showScientistHint()">SHOW HINT</button>
+            <div id="message"></div>
+        </div>
+        <div id="activity"></div>
+    </div>
+
+    <!-- CLUE POPUP -->
+    <div id="cluePopup">
+        <h2 style="color:cyan;margin-bottom:15px;">SCIENTIST CLUE</h2>
+        <p id="clueText"></p>
+        <br>
+        <button onclick="closeClue()">CONTINUE</button>
+    </div>
+
+    <!-- DOOR SCREEN -->
+    <div id="doorScreen">
+        <div id="key">🗝️</div>
+        <div id="door"></div>
+        <h2 style="margin-top:30px;">NEXT ROOM UNLOCKED</h2>
+    </div>
+
+    <!-- C++ STATUS PANEL -->
+    <div id="cppPanel">
+        <strong>⚙️ C++ SERVER LOG</strong><br>
+        <div id="cppLog" style="max-height:100px;overflow-y:auto;margin-top:5px;font-size:10px;"></div>
+    </div>
+
+    <!-- VIDEO SCENE -->
+    <div id="videoScene">
+        <video id="endingVideo" playsinline preload="auto">
+            <source src="images/videos/dooropen.mp4" type="video/mp4">
+        </video>
+    </div>
+
+    <!-- ENDING SCENE -->
+    <div id="endingScene">
+        <div id="endingOverlay"></div>
+        <div id="endingContent">
+            <h1>ESCAPE SUCCESSFUL</h1>
+            <p>
+                The underground facility begins to collapse...<br><br>
+                Robotic Voice Said,<br><br>
+                <span style="color:cyan;">"Congratulations. Intelligence proved stronger than fear."</span>
+                <br><br>
+                But the mystery has only begun...
+            </p>
+        </div>
+    </div>
+
+    <!-- FINAL SCREEN -->
+    <div id="finalScreen">
+        <div>
+            <h1>MISSION COMPLETE</h1>
+            <p>
+                You escaped the forgotten underground facility.
+                <br><br>
+                <span style="color:cyan">
+                    "This is only the beginning...
+                    The game continues."
+                </span>
+                <br><br>
+                More rooms. More mysteries. More experiments await.
+                <br><br>
+                <span style="color:#ffff00;font-size:20px;" id="finalScore">⭐ FINAL SCORE: 0</span>
+            </p>
+            <br><br>
+            <button onclick="playAgain()" style="font-size:20px;padding:15px 40px;">🔄 PLAY AGAIN</button>
+        </div>
+    </div>
+
+</div><!-- end #game -->
+
+<!-- ============================================================
+     JAVASCRIPT — C++ INTEGRATION + GAME LOGIC
+     
+     HOW C++ INTEGRATION WORKS:
+     -------------------------------------------------
+     The C++ server (gameserver.cpp) runs as a separate
+     process on the same machine. It:
+       1. Reads puzzle.txt, activity.txt, anspuzzle.txt,
+          ansactivity.txt on startup
+       2. Writes game.json for the browser to load
+       3. Accepts commands via stdin (LOAD_GAME, SAVE_PROGRESS,
+          EXIT_GAME, LEADERBOARD)
+       4. Reads/writes players.txt to persist progress
+     
+     In a desktop environment (Electron / Node wrapper),
+     this JS would spawn the C++ process and pipe commands.
+     
+     For browser-only demo: We simulate the C++ file
+     operations using localStorage with the same data
+     structures and file formats the C++ code uses,
+     so the project can be demonstrated in a browser
+     while keeping the C++ backend ready for integration.
+     
+     TO RUN WITH REAL C++ BACKEND:
+       g++ -std=c++17 -o gameserver gameserver.cpp
+       ./gameserver
+     Then use the Node.js bridge (server.js) to proxy
+     HTTP requests from this page to the C++ process.
+============================================================ -->
+
+<script>
+
+/* ============================================================
+   C++ BRIDGE LAYER
+   Simulates the C++ server's file operations in the browser.
+   All data structures match the C++ code exactly.
+   
+   C++ File: players.txt  Format: NAME|SCORE|ROOM|PUZZLE|HEALTH
+   C++ File: puzzle.txt   Format: one question per line
+   C++ File: activity.txt Format: one question per line
+   C++ File: anspuzzle.txt    Format: one answer per line
+   C++ File: ansactivity.txt  Format: one answer per line
+   C++ File: game.json    Generated by C++ from above files
+============================================================ */
+
+// ---- Simulated C++ File: puzzle.txt (15 lines) ----
+const CPP_PUZZLE_TXT = [
+    "I speak without a mouth and hear without ears. I have no body, but I come alive with wind.",
+    "2->6||3->12||4->20||5->?",
+    "Three wires appear: Red Blue Green. Choose correct wire.",
+    "B, D, G, K, ?",
+    "Two statues stand guard. One always lies. One always tells truth. You may ask ONE question to know the correct door.",
+    "Unscramble: RCAEES",
+    "If yesterday tomorrow was today, what day is tomorrow?",
+    "Three bottles: A=poison B=sleeping gas C=water. Which bottle is safe?",
+    "❄️1 ❄️❄️4 ❄️❄️❄️9 ❄️❄️❄️❄️?",
+    "The more you take, the more you leave behind.",
+    "3SIH7",
+    "Three switches control one bulb in another room. You can enter the bulb room only once.",
+    "I am always running but never walk.",
+    "What date appears once in 4 years?",
+    "To escape, sacrifice one thing you can never physically hold."
+];
+
+// ---- Simulated C++ File: anspuzzle.txt (15 lines) ----
+const CPP_ANSPUZZLE_TXT = [
+    "Echo","30","Blue","P",
+    "Ask which door the other statue says is correct",
+    "ESCAPE","Today","Bottle C","16","Footsteps",
+    "THIS","Use heat to identify bulb","Water","Feb 29","Time"
+];
+
+// ---- Simulated C++ File: activity.txt (15 lines) ----
+const CPP_ACTIVITY_TXT = [
+    "Choose object related to sound reflection.",
+    "Select correct number: 3*9+5-2/3",
+    "Choose the coolest colour.",
+    "Select missing letter.",
+    "You are facing north. If left becomes right. Which way to face west?",
+    "Find the hidden word DOEMFER.",
+    "Find angle between hour and minute hand at 12:35.",
+    "Find safe bottle.",
+    "Select shape used in measuring area.",
+    "Bread:Jam || Pencil:Eraser || Socks:?",
+    "Move the chair to ____ corner.",
+    "Used to cook food.",
+    "Has mild viscous.",
+    "Select special date.",
+    "What can never be held?"
+];
+
+// ---- Simulated C++ File: ansactivity.txt (15 lines) ----
+const CPP_ANSACTIVITY_TXT = [
+    "Speaker","31.3","Blue","P","Right","FREEDOM","210",
+    "Bottle C","Square","Shoe","THIS","Heat","Water","Feb 29","Time"
+];
+
+/* ============================================================
+   C++ COMMAND SIMULATOR
+   Mirrors the command dispatcher in gameserver.cpp main()
+============================================================ */
+
+// players.txt in localStorage — format mirrors C++ file:
+// each entry: { name, score, currentRoom, currentPuzzle, health }
+
+function cpp_loadPlayers() {
+    // C++: map<string,PlayerRecord> loadPlayers()
+    const raw = localStorage.getItem("cpp_players_txt");
+    if (!raw) return {};
+    try { return JSON.parse(raw); } catch(e) { return {}; }
+}
+
+function cpp_savePlayers(players) {
+    // C++: void savePlayers(const map<string,PlayerRecord>& players)
+    localStorage.setItem("cpp_players_txt", JSON.stringify(players));
+    cppLog("players.txt saved (" + Object.keys(players).length + " records)");
+}
+
+function cpp_LOAD_GAME(name) {
+    // C++: cmd == "LOAD_GAME"
+    cppLog("CMD: LOAD_GAME " + name);
+    const players = cpp_loadPlayers();
+    const key = name.toLowerCase();
+
+    if (players[key]) {
+        const rec = players[key];
+        cppLog("Returning player: " + rec.name +
+               " Room=" + rec.currentRoom +
+               " Puzzle=" + rec.currentPuzzle +
+               " Score=" + rec.score +
+               " Health=" + rec.health);
+        return { ...rec, isReturning: true };
+    } else {
+        // New player
+        const rec = { name: name, score: 0, currentRoom: 0, currentPuzzle: 0, health: 100, isReturning: false };
+        players[key] = rec;
+        cpp_savePlayers(players);
+        cppLog("New player created: " + name);
+        return rec;
+    }
+}
+
+function cpp_SAVE_PROGRESS(name, score, room, puzzle, health) {
+    // C++: cmd == "SAVE_PROGRESS"
+    cppLog("CMD: SAVE_PROGRESS " + name + " score=" + score +
+           " room=" + room + " puzzle=" + puzzle + " hp=" + health);
+    const players = cpp_loadPlayers();
+    const key = name.toLowerCase();
+    players[key] = { name, score, currentRoom: room, currentPuzzle: puzzle, health };
+    cpp_savePlayers(players);
+    cppLog("SAVE_OK");
+}
+
+function cpp_EXIT_GAME(name, score, room, puzzle, health) {
+    // C++: cmd == "EXIT_GAME"
+    cppLog("CMD: EXIT_GAME " + name);
+    cpp_SAVE_PROGRESS(name, score, room, puzzle, health);
+    cppLog("Game saved for " + name + " before exit.");
+}
+
+function cpp_GET_QUESTIONS() {
+    // C++: cmd == "GET_QUESTIONS" → calls writeGameJson()
+    // Returns the in-memory equivalent of game.json
+    cppLog("CMD: GET_QUESTIONS → building game.json...");
+    const total = Math.min(
+        CPP_PUZZLE_TXT.length, CPP_ACTIVITY_TXT.length,
+        CPP_ANSPUZZLE_TXT.length, CPP_ANSACTIVITY_TXT.length
+    );
+    const puzzles = [];
+    for (let i = 0; i < total; i++) {
+        puzzles.push({
+            id: i,
+            question: CPP_PUZZLE_TXT[i],
+            answer:   CPP_ANSPUZZLE_TXT[i],
+            activity: CPP_ACTIVITY_TXT[i],
+            actAns:   CPP_ANSACTIVITY_TXT[i]
+        });
+    }
+    cppLog("game.json built (" + total + " puzzles)");
+    return { puzzles };
+}
+
+// C++ log — silent (logs to console only, green panel removed)
+function cppLog(msg) {
+    console.log("[CPP]", msg);
+}
+
+/* ============================================================
+   GAME DATA — loaded from C++ simulated game.json
+============================================================ */
+
+// Game data loaded from C++ (via cpp_GET_QUESTIONS)
+let GAME_JSON = null;
+
+/* ============================================================
+   ROOMS — layouts unchanged from original HTML
+   Questions/answers fetched from C++ file data above
+============================================================ */
+
+const rooms = [
+    {
+        title: "ROOM 1 — THE AWAKENING CHAMBER",
+        backgrounds: ["images/phase1.jpeg","images/phase2.jpeg","images/phase3.jpeg"],
+        puzzles: [
+            { options:["Echo","Smoke","Shadow","Water"],    hint:"It repeats your voice.",              activity:"sound"    },
+            { options:["25","30","35","40"],                hint:"Multiply number with next number.",   activity:"number"   },
+            { options:["Red","Blue","Green","Black"],       hint:"Spreads all over the world.",         activity:"wire"     }
+        ]
+    },
+    {
+        title: "ROOM 2 — THE LIBRARY OF SHADOWS",
+        backgrounds: ["images/phase4.jpeg","images/phase5.jpeg","images/phase6.jpeg"],
+        puzzles: [
+            { options:["M","N","P","Q"],
+              hint:"Letters skip in increasing pattern.",   activity:"letters"  },
+            { options:["Ask both statues","Choose random door","Ask which door the other statue says is correct","Break the door"],
+              hint:"Use one liar against the other.",       activity:"door"     },
+            { options:["ESCAPE","SEARCH","SCREEN","SCARE"], hint:"You are trying to do this in the game.", activity:"word" }
+        ]
+    },
+    {
+        title: "ROOM 3 — THE FROZEN LABORATORY",
+        backgrounds: ["images/phase7.jpeg","images/phase8.jpeg","images/phase9.jpeg"],
+        puzzles: [
+            { options:["Yesterday","Today","Monday","Sunday"], hint:"Think carefully about time shifting.", activity:"calendar" },
+            { options:["Bottle A","Bottle B","Bottle C","None"], hint:"Danger stands between poison and rest.", activity:"bottle" },
+            { options:["12","14","15","16"],                 hint:"Perfect squares.",                   activity:"ice"      }
+        ]
+    },
+    {
+        title: "ROOM 4 — THE HALL OF ILLUSIONS",
+        backgrounds: ["images/phase10.jpeg","images/phase11.jpeg","images/phase12.jpeg"],
+        puzzles: [
+            { options:["Money","Footsteps","Air","Shadow"],  hint:"You leave it while walking.",         activity:"steps"    },
+            { options:["SHIFT","THIS","THIEF","SIGHT"],      hint:"Look at it like a mirror.",           activity:"mirror"   },
+            { options:["Turn all on","Use heat to identify bulb","Break switch","Random guess"],
+              hint:"One bulb becomes warm.",                 activity:"switch"   }
+        ]
+    },
+    {
+        title: "ROOM 5 — THE FINAL EXIT CHAMBER",
+        backgrounds: ["images/phase13.jpeg","images/phase14.jpeg","images/phase15.jpeg"],
+        puzzles: [
+            { options:["Human","Robot","Water","Clock"],     hint:"Flows endlessly.",                   activity:"water"    },
+            { options:["Feb 28","Feb 29","April 31","Jan 1"],hint:"Leap year special date.",            activity:"calendar2"},
+            { options:["Money","Time","Air","Light"],        hint:"You lose it every second.",           activity:"clock"    }
+        ]
+    }
+];
+
+/* ============================================================
+   PLAYER STATE
+============================================================ */
+
+let playerName        = "";
+let selectedCharacter = null;
+let health            = 100;
+let maxHealth         = 100;
+let timer             = 60;
+let timerInterval;
+let currentRoom       = 0;
+let currentPuzzle     = 0;
+let questionSolved    = false;
+let activitySolved    = false;
+let score             = 0;
+
+// Saved C++ record for the returning player popup
+let pendingCppRecord  = null;
+
+const characters = [
+    { name:"Doctor",    health:120, time:0, clue:false },
+    { name:"Hacker",    health:100, time:5, clue:false },
+    { name:"Scientist", health:100, time:0, clue:true  }
+];
+
+/* ============================================================
+   SELECT CHARACTER
+============================================================ */
+
+function selectCharacter(index) {
+    selectedCharacter = characters[index];
+    document.querySelectorAll(".character")
+            .forEach(c => c.classList.remove("selected"));
+    document.querySelectorAll(".character")[index].classList.add("selected");
+}
+
+/* ============================================================
+   SHOW INFO / ABOUT
+============================================================ */
+
+function showInfo() {
+    playerName = document.getElementById("nameInput").value.trim();
+    if (!playerName)        { alert("ENTER YOUR NAME"); return; }
+    if (!selectedCharacter) { alert("SELECT A CHARACTER"); return; }
+
+    document.getElementById("startScreen").style.display = "none";
+    document.getElementById("infoScreen").style.display  = "flex";
+}
+
+function showAboutScreen() {
+    document.getElementById("infoScreen").style.display  = "none";
+    document.getElementById("aboutScreen").style.display = "flex";
+}
+
+/* ============================================================
+   ENTER FACILITY  — calls C++ LOAD_GAME
+============================================================ */
+
+function enterFacility() {
+    document.getElementById("aboutScreen").style.display = "none";
+
+    // ---- C++ CALL: LOAD_GAME ----
+    const rec = cpp_LOAD_GAME(playerName);
+    GAME_JSON  = cpp_GET_QUESTIONS();
+
+    if (rec.isReturning && (rec.currentRoom > 0 || rec.currentPuzzle > 0)) {
+        // Show returning-player popup
+        pendingCppRecord = rec;
+        document.getElementById("returningName").textContent = rec.name.toUpperCase();
+        document.getElementById("returningInfo").innerHTML =
+            "We found your saved progress!<br>" +
+            "Room <strong>" + (rec.currentRoom+1) + "</strong>, " +
+            "Level <strong>" + (rec.currentPuzzle+1) + "</strong> | " +
+            "Score: <strong>" + rec.score + "</strong><br>" +
+            "Health: <strong>" + rec.health + "</strong>";
+        document.getElementById("returningPopup").style.display = "block";
+    } else {
+        pendingCppRecord = null;
+        showTransitionAndStart(false);
+    }
+}
+
+function continueGame() {
+    document.getElementById("returningPopup").style.display = "none";
+    showTransitionAndStart(true);
+}
+
+function newGame() {
+    document.getElementById("returningPopup").style.display = "none";
+    pendingCppRecord = null;
+    showTransitionAndStart(false);
+}
+
+function showTransitionAndStart(isContinue) {
+    const ts = document.getElementById("transitionScreen");
+    ts.style.display = "flex";
+    let dots = 0;
+    const el = document.getElementById("transitionText");
+    const iv = setInterval(() => {
+        dots = (dots+1) % 4;
+        el.innerText = "ENTERING TO THE GAME" + ".".repeat(dots);
+    }, 500);
+    setTimeout(() => {
+        clearInterval(iv);
+        ts.style.display = "none";
+        startGame(isContinue);
+    }, 3000);
+}
+
+/* ============================================================
+   START GAME
+============================================================ */
+
+function startGame(isContinue) {
+    if (isContinue && pendingCppRecord) {
+        // Restore C++ saved state
+        currentRoom    = pendingCppRecord.currentRoom;
+        currentPuzzle  = pendingCppRecord.currentPuzzle;
+        score          = pendingCppRecord.score;
+        health         = pendingCppRecord.health;
+        maxHealth      = selectedCharacter.health;
+    } else {
+        currentRoom    = 0;
+        currentPuzzle  = 0;
+        score          = 0;
+        health         = selectedCharacter.health;
+        maxHealth      = selectedCharacter.health;
+    }
+
+    document.getElementById("exitBtn").style.display      = "block";
+    document.getElementById("scoreDisplay").style.display = "block";
+
+    updateHealth();
+    updateScore();
+    loadPuzzle();
+}
+
+/* ============================================================
+   LOAD PUZZLE  — reads from C++ game.json data
+============================================================ */
+
+function loadPuzzle() {
+    questionSolved = false;
+    activitySolved = false;
+    clearInterval(timerInterval);
+    timer = 60 + selectedCharacter.time;
+    startTimer();
+
+    const room   = rooms[currentRoom];
+    const layout = room.puzzles[currentPuzzle];
+
+    // Get question + answer from C++ data (GAME_JSON = game.json equivalent)
+    const puzzleIndex = currentRoom * 3 + currentPuzzle;
+    const cppPuzzle   = GAME_JSON.puzzles[puzzleIndex];
+
+    document.getElementById("game").style.backgroundImage =
+        `url('${room.backgrounds[currentPuzzle]}')`;
+
+    document.getElementById("roomInfo").innerText =
+        `${room.title} • LEVEL ${currentPuzzle + 1}`;
+
+    document.getElementById("question").innerHTML =
+        `${playerName},<br><br>${cppPuzzle.question}`;
+
+    document.getElementById("options").innerHTML = "";
+    document.getElementById("activity").innerHTML = "";
+    document.getElementById("message").innerText  = "";
+
+    // Hint button
+    document.getElementById("hintBtn").style.display =
+        selectedCharacter.clue ? "inline-block" : "none";
+
+    // Options (layout from rooms[], correct answer from C++ anspuzzle.txt)
+    layout.options.forEach(option => {
+        const btn = document.createElement("button");
+        btn.classList.add("option");
+        btn.innerText = option;
+        btn.onclick   = () => checkAnswer(option, cppPuzzle.answer);
+        document.getElementById("options").appendChild(btn);
+    });
+
+    // Activity
+    loadActivities(layout, cppPuzzle);
+
+    // Auto-save progress via C++ SAVE_PROGRESS
+    cpp_SAVE_PROGRESS(playerName, score, currentRoom, currentPuzzle, health);
+}
+
+/* ============================================================
+   SCIENTIST HINT
+============================================================ */
+
+function showScientistHint() {
+    const puzzleIndex = currentRoom * 3 + currentPuzzle;
+    const hint = rooms[currentRoom].puzzles[currentPuzzle].hint;
+    document.getElementById("cluePopup").style.display = "block";
+    document.getElementById("clueText").innerText = hint;
+}
+
+function closeClue() {
+    document.getElementById("cluePopup").style.display = "none";
+}
+
+/* ============================================================
+   TIMER
+============================================================ */
+
+function startTimer() {
+    document.getElementById("timer").innerText = `⏳ ${timer}`;
+    timerInterval = setInterval(() => {
+        timer--;
+        document.getElementById("timer").innerText = `⏳ ${timer}`;
+        if (timer <= 0) {
+            clearInterval(timerInterval);
+            restartRoom();
+        }
+    }, 1000);
+}
+
+function restartRoom() {
+    alert("TIME OVER! ROOM RESTARTED");
+    currentPuzzle = 0;
+    loadPuzzle();
+}
+
+/* ============================================================
+   UPDATE HEALTH / SCORE
+============================================================ */
+
+function updateHealth() {
+    const pct = (health / maxHealth) * 100;
+    document.getElementById("healthBar").style.width = pct + "%";
+    document.getElementById("healthText").innerText  = `${health}/${maxHealth}`;
+    if (health <= 0) {
+        alert("YOU DIED");
+        // C++ EXIT_GAME — save 0 score
+        cpp_EXIT_GAME(playerName, 0, 0, 0, maxHealth);
+        location.reload();
+    }
+}
+
+function updateScore() {
+    document.getElementById("scoreDisplay").innerText = `⭐ SCORE: ${score}`;
+}
+
+/* ============================================================
+   CHECK ANSWER  (correct answer from C++ anspuzzle.txt)
+============================================================ */
+
+function checkProgression() {
+    if (questionSolved && activitySolved) {
+        score += 100;
+        updateScore();
+        document.getElementById("message").innerText = "ACCESS GRANTED";
+        // C++ SAVE_PROGRESS after each correct solve
+        cpp_SAVE_PROGRESS(playerName, score, currentRoom, currentPuzzle, health);
+        setTimeout(() => {
+            currentPuzzle++;
+            if (currentPuzzle < rooms[currentRoom].puzzles.length) {
+                loadPuzzle();
+            } else {
+                nextRoom();
+            }
+        }, 1200);
+    }
+}
+
+function checkAnswer(selected, correctAnswer) {
+    if (selected === correctAnswer) {
+        questionSolved = true;
+        if (!activitySolved) {
+            document.getElementById("message").innerText = "PUZZLE SOLVED. COMPLETE ACTIVITY.";
+        }
+        checkProgression();
+    } else {
+        health -= 20;
+        updateHealth();
+        score = Math.max(0, score - 30);
+        updateScore();
+        cpp_SAVE_PROGRESS(playerName, score, currentRoom, currentPuzzle, health);
+        document.getElementById("message").innerText = "WRONG ANSWER  -30 pts";
+    }
+}
+
+/* ============================================================
+   ACTIVITY  (correct answer from C++ ansactivity.txt)
+============================================================ */
+
+function correctActivity() {
+    activitySolved = true;
+    if (!questionSolved) {
+        document.getElementById("message").innerText = "ACTIVITY COMPLETED. SOLVE PUZZLE.";
+    }
+    checkProgression();
+}
+
+function wrongActivity() {
+    health -= 20;
+    updateHealth();
+    score = Math.max(0, score - 30);
+    updateScore();
+    cpp_SAVE_PROGRESS(playerName, score, currentRoom, currentPuzzle, health);
+    document.getElementById("message").innerText = "WRONG ACTIVITY  -30 pts";
+}
+
+/* ============================================================
+   NEXT ROOM
+============================================================ */
+
+function nextRoom() {
+    document.getElementById("doorScreen").style.display = "flex";
+    setTimeout(() => {
+        document.getElementById("doorScreen").style.display = "none";
+        currentRoom++;
+        currentPuzzle = 0;
+        if (currentRoom < rooms.length) {
+            loadPuzzle();
+        } else {
+            showVideoScene();
+        }
+    }, 3000);
+}
+
+/* ============================================================
+   EXIT GAME — calls C++ EXIT_GAME
+============================================================ */
+
+function exitGame() {
+    if (confirm("Save progress and exit?")) {
+        cpp_EXIT_GAME(playerName, score, currentRoom, currentPuzzle, health);
+        alert("✅ Progress saved! Come back anytime.\n\nC++ server has written your data to players.txt");
+        location.reload();
+    }
+}
+
+/* ============================================================
+   PLAY AGAIN
+============================================================ */
+
+function playAgain() {
+    // Reset C++ player record
+    cpp_SAVE_PROGRESS(playerName, 0, 0, 0, 100);
+    location.reload();
+}
+
+/* ============================================================
+   ENDING SEQUENCE
+============================================================ */
+
+function showVideoScene() {
+    // Final C++ save with completed state
+    cpp_SAVE_PROGRESS(playerName, score, rooms.length, 0, health);
+
+    const videoScene = document.getElementById("videoScene");
+    const video      = document.getElementById("endingVideo");
+    videoScene.style.display = "flex";
+    video.currentTime = 0;
+    const p = video.play();
+    if (p !== undefined) {
+        p.then(() => {}).catch(() => { video.controls = true; });
+    }
+    video.onended = () => {
+        videoScene.style.display = "none";
+        showEndingScene();
+    };
+}
+
+function showEndingScene() {
+    document.getElementById("endingScene").style.display = "flex";
+    setTimeout(() => {
+        document.getElementById("endingScene").style.display = "none";
+        endGame();
+    }, 6000);
+}
+
+function endGame() {
+    document.getElementById("finalScore").textContent = "⭐ FINAL SCORE: " + score;
+    document.getElementById("finalScreen").style.display = "flex";
+}
+
+/* ============================================================
+   LOAD ACTIVITIES  — layout unchanged from original HTML
+   Activity questions shown from C++ activity.txt via cppPuzzle
+============================================================ */
+
+function loadActivities(layout, cppPuzzle) {
+    const type = layout.activity;
+    const actQ = cppPuzzle ? cppPuzzle.activity : "";
+
+    /* SOUND */
+    if (type === "sound") {
+        document.getElementById("activity").innerHTML = `
+<h3>🎤 SOUND MATCH</h3>
+<p>${actQ}</p>
+<div class="activityButtons">
+<button class="activityBtn" onclick="correctActivity()">🔊 Speaker</button>
+<button class="activityBtn" onclick="wrongActivity()">🔥 Fire</button>
+<button class="activityBtn" onclick="wrongActivity()">💧 Water</button>
+</div>`;
+    }
+
+    /* NUMBER */
+    if (type === "number") {
+        document.getElementById("activity").innerHTML = `
+<h3>🔢 NUMBER PATTERN</h3>
+<p>${actQ}</p>
+<div class="activityButtons">
+<button class="activityBtn" onclick="wrongActivity()">28</button>
+<button class="activityBtn" onclick="correctActivity()">31.3</button>
+<button class="activityBtn" onclick="wrongActivity()">30.5</button>
+</div>`;
+    }
+
+    /* WIRE */
+    if (type === "wire") {
+        document.getElementById("activity").innerHTML = `
+<h3>⚡ WIRE CONNECTION</h3>
+<p>${actQ}</p>
+<div class="activityButtons">
+<button class="activityBtn" onclick="wrongActivity()">🔴 Red</button>
+<button class="activityBtn" onclick="correctActivity()">🔵 Blue</button>
+<button class="activityBtn" onclick="wrongActivity()">🟢 Green</button>
+</div>`;
+    }
+
+    /* LETTERS */
+    if (type === "letters") {
+        document.getElementById("activity").innerHTML = `
+<h3>🔤 LETTER SEQUENCE</h3>
+<p>${actQ}</p>
+<div class="activityButtons">
+<button class="activityBtn" onclick="wrongActivity()">M</button>
+<button class="activityBtn" onclick="correctActivity()">P</button>
+<button class="activityBtn" onclick="wrongActivity()">Q</button>
+</div>`;
+    }
+
+    /* DOOR */
+    if (type === "door") {
+        document.getElementById("activity").innerHTML = `
+<h3>🚪 LOGIC DOOR</h3>
+<p>${actQ}</p>
+<div class="activityButtons">
+<button class="activityBtn" onclick="correctActivity()">Right</button>
+<button class="activityBtn" onclick="wrongActivity()">Left</button>
+<button class="activityBtn" onclick="wrongActivity()">Back</button>
+</div>`;
+    }
+
+    /* WORD */
+    if (type === "word") {
+        document.getElementById("activity").innerHTML = `
+<h3>🧩 WORD SCRAMBLE</h3>
+<p>${actQ}</p>
+<div class="activityButtons">
+<button class="activityBtn" onclick="correctActivity()">FREEDOM</button>
+<button class="activityBtn" onclick="wrongActivity()">FORMED</button>
+<button class="activityBtn" onclick="wrongActivity()">DEFENDER</button>
+</div>`;
+    }
+
+    /* CALENDAR */
+    if (type === "calendar") {
+        document.getElementById("activity").innerHTML = `
+<h3>📅 TIME SHIFT</h3>
+<p>${actQ}</p>
+<div class="activityButtons">
+<button class="activityBtn" onclick="correctActivity()">210</button>
+<button class="activityBtn" onclick="wrongActivity()">150</button>
+<button class="activityBtn" onclick="wrongActivity()">160</button>
+</div>`;
+    }
+
+    /* BOTTLE */
+    if (type === "bottle") {
+        document.getElementById("activity").innerHTML = `
+<h3>🧪 SAFE BOTTLE</h3>
+<p>${actQ}</p>
+<div class="activityButtons">
+<button class="activityBtn" onclick="wrongActivity()">Bottle A</button>
+<button class="activityBtn" onclick="wrongActivity()">Bottle B</button>
+<button class="activityBtn" onclick="correctActivity()">Bottle C</button>
+</div>`;
+    }
+
+    /* ICE */
+    if (type === "ice") {
+        document.getElementById("activity").innerHTML = `
+<h3>❄️ ICE PATTERN</h3>
+<p>${actQ}</p>
+<div class="activityButtons">
+<button class="activityBtn" onclick="wrongActivity()">Rectangle</button>
+<button class="activityBtn" onclick="correctActivity()">Square</button>
+<button class="activityBtn" onclick="wrongActivity()">Circle</button>
+</div>`;
+    }
+
+    /* STEPS */
+    if (type === "steps") {
+        document.getElementById("activity").innerHTML = `
+<h3>👣 WALK TRACK</h3>
+<p>${actQ}</p>
+<div class="activityButtons">
+<button class="activityBtn" onclick="correctActivity()">Shoe</button>
+<button class="activityBtn" onclick="wrongActivity()">Thread</button>
+<button class="activityBtn" onclick="wrongActivity()">Ground</button>
+</div>`;
+    }
+
+    /* MIRROR */
+    if (type === "mirror") {
+        document.getElementById("activity").innerHTML = `
+<h3>🪞 MIRROR CODE</h3>
+<p>${actQ}</p>
+<div class="activityButtons">
+<button class="activityBtn" onclick="correctActivity()">THIS</button>
+<button class="activityBtn" onclick="wrongActivity()">SHIFT</button>
+<button class="activityBtn" onclick="wrongActivity()">THIEF</button>
+</div>`;
+    }
+
+    /* SWITCH */
+    if (type === "switch") {
+        document.getElementById("activity").innerHTML = `
+<h3>💡 BULB TEST</h3>
+<p>${actQ}</p>
+<div class="activityButtons">
+<button class="activityBtn" onclick="correctActivity()">Heat</button>
+<button class="activityBtn" onclick="wrongActivity()">Plate</button>
+<button class="activityBtn" onclick="wrongActivity()">Light</button>
+</div>`;
+    }
+
+    /* WATER */
+    if (type === "water") {
+        document.getElementById("activity").innerHTML = `
+<h3>🌊 FLOW TEST</h3>
+<p>${actQ}</p>
+<div class="activityButtons">
+<button class="activityBtn" onclick="correctActivity()">Water</button>
+<button class="activityBtn" onclick="wrongActivity()">Stone</button>
+<button class="activityBtn" onclick="wrongActivity()">Wall</button>
+</div>`;
+    }
+
+    /* CALENDAR 2 */
+    if (type === "calendar2") {
+        document.getElementById("activity").innerHTML = `
+<h3>📆 LEAP YEAR</h3>
+<p>${actQ}</p>
+<div class="activityButtons">
+<button class="activityBtn" onclick="correctActivity()">Feb 29</button>
+<button class="activityBtn" onclick="wrongActivity()">Feb 14</button>
+<button class="activityBtn" onclick="wrongActivity()">Jan 26</button>
+</div>`;
+    }
+
+    /* CLOCK */
+    if (type === "clock") {
+        document.getElementById("activity").innerHTML = `
+<h3>⏳ FINAL CHOICE</h3>
+<p>${actQ}</p>
+<div class="activityButtons">
+<button class="activityBtn" onclick="correctActivity()">Time</button>
+<button class="activityBtn" onclick="wrongActivity()">Money</button>
+<button class="activityBtn" onclick="wrongActivity()">Light</button>
+</div>`;
+    }
+}
+
+</script>
+</body>
+</html>
